@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam+ Score Aggregator | Advanced Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <div class="background-overlay"></div>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <i data-lucide="shield-check" class="logo-icon"></i>
+                <h1>Exam+ <span>Aggregator</span></h1>
+            </div>
+            <p class="subtitle">Unified Module Performance & MPL Analytics</p>
+        </header>
+
+        <main>
+            <section id="upload-section" class="glass-card">
+                <div class="card-header">
+                    <i data-lucide="upload-cloud"></i>
+                    <h2>Upload Exam Data</h2>
+                </div>
+                <p>Drop your Excel/CSV files here (at least 2 files required)</p>
+                <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" multiple accept=".xlsx, .csv" hidden>
+                    <div class="drop-zone-content">
+                        <i data-lucide="files" class="huge-icon"></i>
+                        <span>Drag & Drop files or click to browse</span>
+                        <em class="file-hint">Expects: #, username, firstname, surname, xxxx_classyyyy</em>
+                    </div>
+                </div>
+                <div id="file-list" class="file-list"></div>
+            </section>
+
+            <section id="config-section" class="glass-card hidden">
+                <div class="card-header">
+                    <i data-lucide="settings-2"></i>
+                    <h2>Module Configuration</h2>
+                </div>
+                <div class="config-grid" id="module-config-grid">
+                    <!-- Dynamic module cards will be inserted here -->
+                </div>
+                <div class="summary-stats glass-inner">
+                    <div class="stat-item">
+                        <label>Detected Modules</label>
+                        <span id="stat-count">0 / 4</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>Avg. MPL (%)</label>
+                        <span id="stat-avg-mpl">0.00%</span>
+                    </div>
+                    <div class="stat-item highlight">
+                        <label>Total Pass Mark</label>
+                        <span id="stat-total-pass">0.00 (Ceil: 0)</span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="results-section" class="glass-card hidden">
+                <div class="card-header">
+                    <i data-lucide="table"></i>
+                    <h2>Aggregated Results</h2>
+                    <div class="actions">
+                        <button id="export-btn" class="primary-btn">
+                            <i data-lucide="download"></i> Export to Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="results-table">
+                        <thead>
+                            <tr id="table-header">
+                                <!-- Dynamic headers -->
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Dynamic data -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="chart-section" class="glass-card hidden">
+                <div class="card-header">
+                    <i data-lucide="bar-chart-3"></i>
+                    <h2>Performance Analysis</h2>
+                    <div class="actions">
+                        <button id="download-chart-btn" class="primary-btn secondary-style">
+                            <i data-lucide="image"></i> Save Graph
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div id="performance-chart-container" style="height: 500px;"></div>
+                </div>
+                
+                <div class="stats-table-container">
+                    <div class="card-header" style="border:none; margin-bottom:0.5rem;">
+                        <h3><i data-lucide="calculator"></i> Summary Statistics</h3>
+                        <div class="actions">
+                            <button id="export-stats-btn" class="primary-btn secondary-style">
+                                <i data-lucide="file-spreadsheet"></i> Export Stats
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="stats-table">
+                            <thead>
+                                <tr id="stats-header">
+                                    <th>Metric</th>
+                                    <!-- Dynamic module headers -->
+                                </tr>
+                            </thead>
+                            <tbody id="stats-body">
+                                <!-- Dynamic stats rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Exam+ Aggregator Platform. Medical Education Analytics.</p>
+        </footer>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
