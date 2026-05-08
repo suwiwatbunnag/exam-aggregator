@@ -247,6 +247,79 @@ th {
     white-space: nowrap;
 }
 
+/* Grading Scenarios */
+#grading-scenarios-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.grading-scenario {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.scenario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.scenario-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scenario-step {
+    width: 60px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    color: var(--primary);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-table th, .summary-table td {
+    padding: 0.75rem;
+    text-align: center;
+    border: 1px solid var(--border);
+}
+
+.summary-table th {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-table tr:hover td {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.summary-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.apply-scenario-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
 th.sortable {
     cursor: pointer;
     transition: background 0.2s;
@@ -384,6 +457,81 @@ tr:hover td {
 
 /* Utils */
 .hidden { display: none; }
+
+/* Feedback Badges */
+.feedback-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.fb-very-good { background: #10b981; color: white; }
+.fb-good { background: #3b82f6; color: white; }
+.fb-borderline { background: #f59e0b; color: white; }
+.fb-needs-improvement { background: #ef4444; color: white; }
+
+/* Feedback Grid */
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.feedback-item {
+    background: var(--glass);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.feedback-item h4 {
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feedback-item .student-meta {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 1rem;
+}
+
+.feedback-text-block {
+    background: rgba(0,0,0,0.2);
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    margin-bottom: 1rem;
+}
+
+.copy-fb-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--glass-heavy);
+    border: 1px solid var(--border);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+
+.copy-fb-btn:hover {
+    background: var(--primary);
+}
 
 @keyframes fadeInDown {
     from { opacity: 0; transform: translateY(-20px); }

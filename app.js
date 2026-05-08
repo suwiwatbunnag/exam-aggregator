@@ -12,14 +12,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsTable = document.getElementById('results-table');
     const tableHeader = document.getElementById('table-header');
     const tableBody = document.getElementById('table-body');
-    const exportBtn = document.getElementById('export-btn');
+    
+    const feedbackSection = document.getElementById('feedback-section');
+    const feedbackHeader = document.getElementById('feedback-header');
+    const feedbackBody = document.getElementById('feedback-body');
+    
+    const exportScoresBtn = document.getElementById('export-scores-btn');
+    const exportFeedbackBtn = document.getElementById('export-feedback-btn');
+    const exportGradingBtn = document.getElementById('export-grading-btn');
     const exportStatsBtn = document.getElementById('export-stats-btn');
     const downloadChartBtn = document.getElementById('download-chart-btn');
+    
+    const gradingSection = document.getElementById('grading-section');
+    const gradingHeader = document.getElementById('grading-header');
+    const gradingBody = document.getElementById('grading-body');
 
     let allStudents = {}; // Keyed by username
     let modulesFound = {}; // Keyed by module name
     let uploadedFiles = [];
     let currentSort = { column: '#', direction: 'asc' }; // Sorting state
+    let incrementalRate = 4; // Default 4%
+    let gradingScenarios = {
+        1: 4.0,
+        2: 3.0,
+        3: 3.5
+    };
+    let activeScenario = 1;
 
     // Drag and Drop handlers
     dropZone.addEventListener('click', () => fileInput.click());
@@ -182,8 +200,157 @@ document.addEventListener('DOMContentLoaded', () => {
         window.totalFullScore = totalFullScore;
 
         renderResultsTable();
+        renderFeedbackTable();
+        renderGradingSummaries();
+        renderGradingTable();
         renderBoxPlot();
         renderStatsTable();
+    }
+
+    const incrementalRateInput = document.getElementById('incremental-rate');
+    if (incrementalRateInput) {
+        incrementalRateInput.addEventListener('input', (e) => {
+            incrementalRate = parseFloat(e.target.value) || 0;
+            updateAggregates();
+        });
+    }
+
+    // Grading Scenario Handlers
+    document.querySelectorAll('.scenario-step').forEach(input => {
+        input.addEventListener('input', (e) => {
+            const id = e.target.dataset.id;
+            gradingScenarios[id] = parseFloat(e.target.value) || 0;
+            renderGradingSummaries();
+            if (activeScenario == id) renderGradingTable();
+        });
+    });
+
+    document.querySelectorAll('.apply-scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            activeScenario = btn.dataset.id;
+            document.getElementById('active-scenario-label').textContent = activeScenario;
+            
+            // Highlight active button
+            document.querySelectorAll('.apply-scenario-btn').forEach(b => {
+                b.classList.add('secondary-style');
+            });
+            btn.classList.remove('secondary-style');
+            
+            renderGradingTable();
+        });
+    });
+
+    function calculateGrade(percent, mplPercent, step) {
+        if (percent < mplPercent) return 'D/F';
+        if (percent < mplPercent + step) return 'D+';
+        if (percent < mplPercent + 2 * step) return 'C';
+        if (percent < mplPercent + 3 * step) return 'C+';
+        if (percent < mplPercent + 4 * step) return 'B';
+        if (percent < mplPercent + 5 * step) return 'B+';
+        return 'A';
+    }
+
+    function renderGradingSummaries() {
+        const grades = ['D/F', 'D+', 'C', 'C+', 'B', 'B+', 'A'];
+        const totalFullScore = window.totalFullScore || 100;
+        const mplPercent = (window.avgMPL || 0) * 100;
+
+        [1, 2, 3].forEach(id => {
+            const step = gradingScenarios[id];
+            const counts = { 'D/F': 0, 'D+': 0, 'C': 0, 'C+': 0, 'B': 0, 'B+': 0, 'A': 0 };
+            
+            // Count students
+            Object.values(allStudents).forEach(student => {
+                let total = 0;
+                Object.keys(modulesFound).forEach(m => total += (student.scores[m] || 0));
+                const p = (total / totalFullScore) * 100;
+                counts[calculateGrade(p, mplPercent, step)]++;
+            });
+
+            const body = document.getElementById(`summary-body-${id}`);
+            if (!body) return;
+
+            let html = '';
+            
+            // Row 1: Score (%)
+            html += `<tr><td>Min % Score</td>`;
+            grades.forEach((g, idx) => {
+                if (g === 'D/F') html += `<td>0.00%</td>`;
+                else if (g === 'D+') html += `<td>${mplPercent.toFixed(2)}%</td>`;
+                else html += `<td>${(mplPercent + (idx - 1) * step).toFixed(2)}%</td>`;
+            });
+            html += `</tr>`;
+
+            // Row 2: Score (Points)
+            html += `<tr><td>Min Points</td>`;
+            grades.forEach((g, idx) => {
+                if (g === 'D/F') html += `<td>0.00</td>`;
+                else if (g === 'D+') html += `<td>${(totalFullScore * mplPercent / 100).toFixed(2)}</td>`;
+                else html += `<td>${(totalFullScore * (mplPercent + (idx - 1) * step) / 100).toFixed(2)}</td>`;
+            });
+            html += `</tr>`;
+
+            // Row 3: Count
+            html += `<tr><td>No. of Students</td>`;
+            grades.forEach(g => html += `<td>${counts[g]}</td>`);
+            html += `</tr>`;
+
+            // Row 4: % of Class
+            const totalStudents = Object.keys(allStudents).length || 1;
+            html += `<tr><td>% of Class</td>`;
+            grades.forEach(g => html += `<td>${((counts[g] / totalStudents) * 100).toFixed(1)}%</td>`);
+            html += `</tr>`;
+
+            body.innerHTML = html;
+        });
+    }
+
+    function renderGradingTable() {
+        if (!gradingSection || !gradingBody) return;
+        const modules = Object.keys(modulesFound);
+        if (modules.length === 0) return;
+
+        gradingSection.classList.remove('hidden');
+        const step = gradingScenarios[activeScenario];
+        const mplPercent = (window.avgMPL || 0) * 100;
+        
+        // Header
+        gradingHeader.innerHTML = `<th>#</th><th>Username</th><th>Firstname</th><th>Surname</th><th>Total Score</th><th>Percentage (%)</th><th>Grade</th>`;
+
+        // Body
+        gradingBody.innerHTML = '';
+        Object.values(allStudents).forEach(student => {
+            const tr = document.createElement('tr');
+            let totalScore = 0;
+            modules.forEach(modName => totalScore += (student.scores[modName] || 0));
+            
+            const percent = (totalScore / window.totalFullScore) * 100;
+            const grade = calculateGrade(percent, mplPercent, step);
+            
+            tr.innerHTML = `
+                <td>${student['#']}</td>
+                <td>${student['username']}</td>
+                <td>${student['firstname']}</td>
+                <td>${student['surname']}</td>
+                <td>${totalScore.toFixed(2)}</td>
+                <td>${percent.toFixed(2)}%</td>
+                <td style="font-weight: bold; color: var(--primary);">${grade}</td>
+            `;
+            gradingBody.appendChild(tr);
+        });
+    }
+
+    function getFeedbackCategory(score, fullScore, mpl) {
+        if (!fullScore || fullScore === 0) return { label: 'N/A', class: '' };
+        
+        const scorePercent = (score / fullScore) * 100;
+        const mplPercent = mpl * 100;
+        const ir = incrementalRate;
+
+        if (scorePercent >= mplPercent + 20) return { label: 'Very good', class: 'fb-very-good' };
+        if (scorePercent >= mplPercent + 12) return { label: 'Good', class: 'fb-good' };
+        if (scorePercent >= mplPercent + 4) return { label: 'Borderline', class: 'fb-borderline' };
+        return { label: 'Needs improvement', class: 'fb-needs-improvement' };
     }
 
     function calculateStats(scores) {
@@ -244,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderResultsTable() {
-// ... existing renderResultsTable code ...
         const modules = Object.keys(modulesFound);
         if (modules.length === 0) return;
 
@@ -318,6 +484,43 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tr.innerHTML = rowHtml;
             tableBody.appendChild(tr);
+        });
+    }
+
+    function renderFeedbackTable() {
+        const modules = Object.keys(modulesFound);
+        if (modules.length === 0) return;
+
+        feedbackSection.classList.remove('hidden');
+        
+        // Header
+        let headerHtml = `<th>#</th><th>Username</th><th>Firstname</th><th>Surname</th>`;
+        modules.forEach(mod => headerHtml += `<th>${mod} Feedback</th>`);
+        feedbackHeader.innerHTML = headerHtml;
+
+        // Body
+        feedbackBody.innerHTML = '';
+        Object.values(allStudents).forEach(student => {
+            const tr = document.createElement('tr');
+            let rowSum = 0;
+            
+            let rowHtml = `
+                <td>${student['#']}</td>
+                <td>${student['username']}</td>
+                <td>${student['firstname']}</td>
+                <td>${student['surname']}</td>
+            `;
+
+            modules.forEach((modName) => {
+                const score = student.scores[modName] || 0;
+                rowSum += score;
+                const mod = modulesFound[modName];
+                const fb = getFeedbackCategory(score, mod.fullScore, mod.mpl);
+                rowHtml += `<td><span class="feedback-badge ${fb.class}">${fb.label}</span></td>`;
+            });
+
+            tr.innerHTML = rowHtml;
+            feedbackBody.appendChild(tr);
         });
     }
 
@@ -473,11 +676,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    exportBtn.addEventListener('click', () => {
+    exportScoresBtn.addEventListener('click', () => {
         const modules = Object.keys(modulesFound);
         const data = [];
         
-        // Prepare Data for Export
         Object.values(allStudents).forEach(student => {
             const row = {
                 '#': student['#'],
@@ -486,9 +688,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Surname': student['surname']
             };
             let sum = 0;
-            modules.forEach(mod => {
-                const score = student.scores[mod] || 0;
-                row[mod] = score;
+            modules.forEach(modName => {
+                const score = student.scores[modName] || 0;
+                row[modName] = score;
                 sum += score;
             });
             row[`SUM (${window.totalFullScore})`] = sum;
@@ -496,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const ws = XLSX.utils.json_to_sheet(data);
-        
+
         // --- Statistics Sheet ---
         const statsData = [];
         const metrics = ['Max', 'Min', 'Mean', 'SD', 'Median', 'IQR'];
@@ -520,70 +722,111 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const wsStats = XLSX.utils.json_to_sheet(statsData);
 
-        // Apply Styles to Main Sheet
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let R = range.s.r + 1; R <= range.e.r; ++R) {
             const studentIdx = R - 1;
             const student = Object.values(allStudents)[studentIdx];
             let rowSum = 0;
-
             modules.forEach((modName, Cidx) => {
-                const colIdx = 4 + Cidx; // After #, User, First, Sur
-                const cellRef = XLSX.utils.encode_cell({r: R, c: colIdx});
+                const colIdx = 4 + Cidx;
                 const score = student.scores[modName] || 0;
                 rowSum += score;
                 const mod = modulesFound[modName];
-
                 if (score < mod.ceilPassMark) {
                     const colors = ['3b82f6', '10b981', 'f59e0b', 'ef4444'];
-                    const color = colors[Cidx % 4];
+                    const cellRef = XLSX.utils.encode_cell({r: R, c: colIdx});
                     if (!ws[cellRef]) ws[cellRef] = { v: score };
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: color } },
-                        font: { color: { rgb: "FFFFFF" }, bold: true }
-                    };
+                    ws[cellRef].s = { fill: { fgColor: { rgb: colors[Cidx % 4] } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
                 }
             });
-
-            // SUM Column
             const sumColIdx = 4 + modules.length;
-            const sumCellRef = XLSX.utils.encode_cell({r: R, c: sumColIdx});
             if (rowSum < window.totalPassMarkCeil) {
-                if (!ws[sumCellRef]) ws[sumCellRef] = { v: rowSum };
-                ws[sumCellRef].s = {
-                    fill: { fgColor: { rgb: "EC4899" } }, // Pink
-                    font: { color: { rgb: "FFFFFF" }, bold: true }
-                };
+                const cellRef = XLSX.utils.encode_cell({r: R, c: sumColIdx});
+                if (!ws[cellRef]) ws[cellRef] = { v: rowSum };
+                ws[cellRef].s = { fill: { fgColor: { rgb: "EC4899" } }, font: { color: { rgb: "FFFFFF" }, bold: true } };
             }
         }
-
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Results");
+        XLSX.utils.book_append_sheet(wb, ws, "Scores");
         XLSX.utils.book_append_sheet(wb, wsStats, "Statistics Summary");
         
-        try {
-            // Generate Excel file as Base64 string
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        const uri = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+        const a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        a.href = uri;
+        a.download = "Exam_Scores_and_Stats.xlsx";
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
+    });
+
+    exportFeedbackBtn.addEventListener('click', () => {
+        const modules = Object.keys(modulesFound);
+        const data = [];
+        Object.values(allStudents).forEach(student => {
+            const row = {
+                '#': student['#'],
+                'Username': student['username'],
+                'Firstname': student['firstname'],
+                'Surname': student['surname']
+            };
+            let sum = 0;
+            modules.forEach(modName => {
+                const score = student.scores[modName] || 0;
+                const mod = modulesFound[modName];
+                row[modName + ' Feedback'] = getFeedbackCategory(score, mod.fullScore, mod.mpl).label;
+            });
+            data.push(row);
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Feedback");
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        const uri = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+        const a = document.createElement("a");
+        document.body.appendChild(a);
+        a.style = "display: none";
+        a.href = uri;
+        a.download = "Exam_Feedback.xlsx";
+        a.click();
+        setTimeout(() => document.body.removeChild(a), 100);
+    });
+
+    if (exportGradingBtn) {
+        exportGradingBtn.addEventListener('click', () => {
+            const modules = Object.keys(modulesFound);
+            const data = [];
+            Object.values(allStudents).forEach(student => {
+                let totalScore = 0;
+                modules.forEach(m => totalScore += (student.scores[m] || 0));
+                const percent = (totalScore / window.totalFullScore) * 100;
+                const grade = calculateGrade(percent, (window.avgMPL || 0) * 100, gradingScenarios[activeScenario]);
+
+                data.push({
+                    '#': student['#'],
+                    'Username': student['username'],
+                    'Firstname': student['firstname'],
+                    'Surname': student['surname'],
+                    'Total Score': totalScore.toFixed(2),
+                    'Percentage (%)': percent.toFixed(2) + '%',
+                    'Grade': grade
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Grading");
+            
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-            
-            // Create Data URI
             const uri = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
-            
-            // Create a hidden link and trigger download
             const a = document.createElement("a");
             document.body.appendChild(a);
             a.style = "display: none";
             a.href = uri;
-            a.download = "Aggregated_Exam_Results.xlsx";
+            a.download = "Exam_Grading_Results.xlsx";
             a.click();
-            
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(a);
-            }, 100);
-            
-        } catch (e) {
-            console.error("Export failed:", e);
-            alert("Export failed. Please check the console for details.");
-        }
-    });
+            setTimeout(() => document.body.removeChild(a), 100);
+        });
+    }
 });

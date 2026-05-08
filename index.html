@@ -16,6 +16,10 @@
                 <h1>Exam+ <span>Aggregator</span></h1>
             </div>
             <p class="subtitle">Unified Module Performance & MPL Analytics</p>
+            <nav style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 2rem;">
+                <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 600; border-bottom: 2px solid var(--primary); padding-bottom: 4px;">Aggregator</a>
+                <a href="parser.html" style="color: var(--text-dim); text-decoration: none; font-weight: 500; transition: color 0.3s;">Document Parser</a>
+            </nav>
         </header>
 
         <main>
@@ -57,16 +61,20 @@
                         <label>Total Pass Mark</label>
                         <span id="stat-total-pass">0.00 (Ceil: 0)</span>
                     </div>
+                    <div class="stat-item">
+                        <label>Incremental Rate (%)</label>
+                        <input type="number" id="incremental-rate" value="4" min="0" max="100" style="width: 60px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 2px 5px; font-weight: bold; text-align: center;">
+                    </div>
                 </div>
             </section>
 
             <section id="results-section" class="glass-card hidden">
                 <div class="card-header">
                     <i data-lucide="table"></i>
-                    <h2>Aggregated Results</h2>
+                    <h2>Score Results</h2>
                     <div class="actions">
-                        <button id="export-btn" class="primary-btn">
-                            <i data-lucide="download"></i> Export to Excel
+                        <button id="export-scores-btn" class="primary-btn">
+                            <i data-lucide="download"></i> Export Scores
                         </button>
                     </div>
                 </div>
@@ -81,6 +89,143 @@
                             <!-- Dynamic data -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <section id="feedback-section" class="glass-card hidden">
+                <div class="card-header">
+                    <i data-lucide="message-square"></i>
+                    <h2>Feedback Analysis</h2>
+                    <div class="actions">
+                        <button id="export-feedback-btn" class="primary-btn secondary-style">
+                            <i data-lucide="file-spreadsheet"></i> Export Feedback
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="feedback-table">
+                        <thead>
+                            <tr id="feedback-header">
+                                <!-- Dynamic headers -->
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-body">
+                            <!-- Dynamic data -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="grading-section" class="glass-card hidden">
+                <div class="card-header">
+                    <i data-lucide="graduation-cap"></i>
+                    <h2>Grading Scenarios</h2>
+                </div>
+                
+                <div id="grading-scenarios-container">
+                    <!-- Scenario 1 -->
+                    <div class="grading-scenario" id="scenario-1">
+                        <div class="scenario-header">
+                            <h3>Scenario 1: <input type="number" step="0.1" class="scenario-step" data-id="1" value="4.0"> % Step</h3>
+                            <button class="primary-btn apply-scenario-btn" data-id="1">Apply to Student List</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>D/F</th>
+                                        <th>D+</th>
+                                        <th>C</th>
+                                        <th>C+</th>
+                                        <th>B</th>
+                                        <th>B+</th>
+                                        <th>A</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summary-body-1">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 2 -->
+                    <div class="grading-scenario" id="scenario-2">
+                        <div class="scenario-header">
+                            <h3>Scenario 2: <input type="number" step="0.1" class="scenario-step" data-id="2" value="3.0"> % Step</h3>
+                            <button class="primary-btn secondary-style apply-scenario-btn" data-id="2">Apply to Student List</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>D/F</th>
+                                        <th>D+</th>
+                                        <th>C</th>
+                                        <th>C+</th>
+                                        <th>B</th>
+                                        <th>B+</th>
+                                        <th>A</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summary-body-2">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Scenario 3 -->
+                    <div class="grading-scenario" id="scenario-3">
+                        <div class="scenario-header">
+                            <h3>Scenario 3: <input type="number" step="0.1" class="scenario-step" data-id="3" value="3.5"> % Step</h3>
+                            <button class="primary-btn secondary-style apply-scenario-btn" data-id="3">Apply to Student List</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="summary-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>D/F</th>
+                                        <th>D+</th>
+                                        <th>C</th>
+                                        <th>C+</th>
+                                        <th>B</th>
+                                        <th>B+</th>
+                                        <th>A</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summary-body-3">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="student-grading-list" style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">
+                    <div class="card-header" style="border: none;">
+                        <h3><i data-lucide="users"></i> Student Grade List (Scenario <span id="active-scenario-label">1</span>)</h3>
+                        <div class="actions">
+                            <button id="export-grading-btn" class="primary-btn">
+                                <i data-lucide="download"></i> Export Grading
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="grading-table">
+                            <thead>
+                                <tr id="grading-header">
+                                    <!-- Dynamic headers -->
+                                </tr>
+                            </thead>
+                            <tbody id="grading-body">
+                                <!-- Dynamic data -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
